@@ -71,7 +71,6 @@ st.markdown("""
         color: #94a3b8 !important;
         font-weight: 400;
     }
-    /* Ensure typed text is white */
     .stTextInput > div > div > input, 
     .stTextArea > div > div > textarea {
         color: white !important;
@@ -153,7 +152,6 @@ st.markdown("""
 
 # ---------- Helper Functions ----------
 def call_ai(api_key: str, system_prompt: str, user_prompt: str) -> str:
-    """Call DeepSeek API with error handling."""
     if not api_key or not api_key.startswith("sk-"):
         return "⚠️ Invalid or missing API key. Please add your DeepSeek API key in the sidebar."
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
@@ -172,7 +170,6 @@ def call_ai(api_key: str, system_prompt: str, user_prompt: str) -> str:
         return f"❌ AI Error: {str(e)}"
 
 def scrape_website(url: str) -> dict:
-    """Scrape basic SEO data from a URL."""
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     try:
         r = requests.get(url, timeout=12, headers=headers)
@@ -183,7 +180,6 @@ def scrape_website(url: str) -> dict:
         for m in soup.find_all("meta"):
             if m.get("name", "").lower() == "description":
                 meta_desc = m.get("content", "")
-        # Clean text
         for script in soup(["script", "style", "nav", "footer"]):
             script.decompose()
         text = soup.get_text(separator=" ", strip=True)[:2000]
@@ -234,18 +230,13 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     with st.container():
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            url_seo = st.text_input("Website URL", placeholder="https://example.com", key="seo_url")
-        with col2:
-            st.write("")  # spacer
+        url_seo = st.text_input("Website URL", placeholder="https://example.com", key="seo_url")
         if st.button("🚀 Generate SEO Audit", key="seo_btn"):
             if not api_key:
                 st.error("❌ Please add your DeepSeek API key in the sidebar")
             elif not url_seo:
                 st.error("❌ Please enter a valid URL")
             else:
-                # Normalize URL
                 if not url_seo.startswith(("http://", "https://")):
                     url_seo = "https://" + url_seo
                 with st.spinner("🌐 Fetching website data..."):
@@ -299,7 +290,7 @@ Each email must include:
 - Clear value proposition (what problem you solve)
 - Strong call to action
 
-Number the emails 1-5. Use markdown formatting (headings, bullet points). Keep each email under 150 words."""
+Number the emails 1-5. Use markdown formatting. Keep each email under 150 words."""
                 with st.spinner("✍️ Crafting high-converting emails..."):
                     emails = call_ai(api_key, "You are an expert B2B sales copywriter who writes cold emails that get replies", prompt)
                 st.markdown('<div class="report-text">', unsafe_allow_html=True)
@@ -312,11 +303,7 @@ Number the emails 1-5. Use markdown formatting (headings, bullet points). Keep e
 with tab3:
     with st.container():
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        with col1:
-            prod_name = st.text_input("Product name", placeholder="e.g., Eco-Friendly Water Bottle", key="prod_name")
-        with col2:
-            pass
+        prod_name = st.text_input("Product name", placeholder="e.g., Eco-Friendly Water Bottle", key="prod_name")
         features = st.text_area(
             "Key features (comma separated)", 
             height=80,
@@ -334,7 +321,7 @@ Features: {features if features else 'Not specified'}
 
 Generate high-converting Shopify content:
 1. SEO Product Title (3 variations, include primary keyword)
-2. Product Description (150-200 words, benefit-driven, use emojis, speak to customer pain points)
+2. Product Description (150-200 words, benefit-driven, use emojis)
 3. Image Alt Text (5 different SEO-friendly alt texts)
 4. Meta Description (max 160 characters, include keyword and call to action)
 
@@ -372,7 +359,7 @@ Content snippet: {data['text'][:1200]}
 
 Based on this information, provide a B2B lead research report:
 - **Company Summary** (industry, size estimate, main offerings)
-- **Potential Decision‑Makers** (job titles likely responsible for purchasing)
+- **Potential Decision-Makers** (job titles likely responsible for purchasing)
 - **Needs & Pain Points** (what services/products they might require)
 - **Outreach Angle** (one paragraph, personalized pitch idea)
 
@@ -385,7 +372,7 @@ Make it concise, actionable, and professional. Format in markdown."""
                         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== TOOL 5: AI Code Auditor ====================
+# ==================== TOOL 5: AI Code Auditor (FIXED) ====================
 with tab5:
     with st.container():
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -402,5 +389,17 @@ with tab5:
             elif not code_input.strip():
                 st.error("❌ Please paste some code to audit")
             else:
-                prompt = f"""Language: {lang}
-Code:
+                # Fixed: No backticks inside f-string, plain concatenation
+                prompt = f"Language: {lang}\n\nCode:\n{code_input[:3000]}\n\n"
+                prompt += "Perform a thorough code audit:\n"
+                prompt += "1. Bugs or Errors\n2. Performance Improvements\n3. Best Practices (3 recommendations)\n4. Refactored snippet (if applicable)\nOutput in markdown."
+                with st.spinner("🔎 Reviewing code..."):
+                    audit = call_ai(api_key, "You are a senior software engineer and code reviewer", prompt)
+                st.markdown('<div class="report-text">', unsafe_allow_html=True)
+                st.markdown("### 🧪 Code Audit Report")
+                st.markdown(audit)
+                st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------- Footer ----------
+st.markdown('<div class="footer">Powered by DeepSeek API · Enterprise Grade · Fully Responsive 3D UI</div>', unsafe_allow_html=True)
