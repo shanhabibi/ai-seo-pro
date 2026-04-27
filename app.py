@@ -1,4 +1,3 @@
-cat > app.py << 'EOF'
 import os
 import requests
 import streamlit as st
@@ -7,6 +6,7 @@ from openai import OpenAI
 
 st.set_page_config(page_title="AI SEO Pro", page_icon="🔍", layout="wide")
 
+# Glassmorphism CSS
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(135deg, #0f172a, #1e293b); }
@@ -64,4 +64,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-EOF
